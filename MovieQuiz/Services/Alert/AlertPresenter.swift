@@ -7,11 +7,11 @@
 
 import UIKit
 
-class AlertPresenter {
-    weak var viewController: MovieQuizViewController?
+class AlertPresenter: AlertPresenterProtocol {
+    private weak var delegate: UIViewController?
     
-    init(viewController: MovieQuizViewController? = nil) {
-        self.viewController = viewController
+    init(viewController: UIViewController? = nil) {
+        self.delegate = viewController
     }
     
     func showResult(model: AlertModel) {
@@ -20,7 +20,7 @@ class AlertPresenter {
                                       preferredStyle: .alert)
         let action = UIAlertAction(title: model.title, style: .default, handler: model.completion)
         alert.addAction(action)
-        guard let viewController = viewController else { return }
+        guard let viewController = delegate else { return }
         viewController.present(alert, animated: true)
     }
 }
