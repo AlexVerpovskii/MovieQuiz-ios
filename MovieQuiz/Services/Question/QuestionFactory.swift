@@ -8,7 +8,11 @@
 import Foundation
 
 final class QuestionFactory: QuestionFactoryProtocol {
-    weak var delegate: QuestionFactoryDelegate?
+    private weak var delegate: QuestionFactoryDelegate?
+    
+    init(delegate: QuestionFactoryDelegate? = nil) {
+        self.delegate = delegate
+    }
     private let questions: [QuizQuestion] = [
         QuizQuestion(
             image: "The Godfather",
