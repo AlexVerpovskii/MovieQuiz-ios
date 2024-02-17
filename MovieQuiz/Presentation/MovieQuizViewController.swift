@@ -86,7 +86,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             statisticService?.store(correct: correctAnswers, total: questionsAmount)
             let quizResultsViewModel = QuizResultsViewModel(title: "Этот раунд окончен!",
                                                             text: createMessage(),
-                                                            buttonText: "Сыграть еще?")
+                                                            buttonText: "Сыграть еще раз")
             show(quiz: quizResultsViewModel)
         } else {
             currentQuestionIndex += 1
