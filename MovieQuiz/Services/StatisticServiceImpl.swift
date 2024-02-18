@@ -11,17 +11,6 @@ final class StatisticServiceImpl: StatisticService {
     private let userDefaults = UserDefaults.standard
     
     func store(correct count: Int, total amount: Int) {
-        /*
-         Если мы делаем проверку по кол-ву правильных ответов, зачем создавать новый объект класса?
-         Мы проверяем correct count с уже существующим кол-вом из userDefaults, если окажется, что приходящий параметр count < существуюущего, то мы зря создали объект
-         
-         let newGameStat = GameRecord(correct: count, total: amount, date: Date())
-         
-         if self.bestGame < newGameStat {
-            self.bestGame = GameRecord(correct: count, total: amount, date: Date())
-         }
-         */
-        
         if count > self.bestGame.correct {
             self.bestGame = GameRecord(correct: count, total: amount, date: Date())
         }
