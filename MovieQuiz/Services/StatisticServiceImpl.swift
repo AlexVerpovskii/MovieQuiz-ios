@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class StatisticServiceImpl: StatisticService {
+final class StatisticServiceImpl: StatisticServiceProtocol {
     private let userDefaults = UserDefaults.standard
     
     func store(correct count: Int, total amount: Int) {

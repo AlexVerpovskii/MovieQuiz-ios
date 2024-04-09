@@ -11,7 +11,7 @@ protocol MoviesLoading {
     func loadMovies(handler: @escaping (Result<MostPopularMovies, Error>) -> Void)
 }
 
-struct MoviesLoader: MoviesLoading {
+struct MoviesLoader: MoviesLoadingProtocol {
     
     private let networkClient = NetworkClient()
     private var mostPopularMoviesUrl: URL {

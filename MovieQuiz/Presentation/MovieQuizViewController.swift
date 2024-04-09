@@ -17,23 +17,27 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private final var questionFactory: QuestionFactoryProtocol?
     private final var currentQuestion: QuizQuestion?
     private final var alertPresenter: AlertPresenterProtocol?
-    private final var statisticService: StatisticService?
+    private final var statisticService: StatisticServiceProtocol?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let transfrom = CGAffineTransform.init(scaleX: 2.5, y: 2.5)
+        activityIndicator.transform = transfrom
+        
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         statisticService = StatisticServiceImpl()
         alertPresenter = AlertPresenter(viewController: self)
+        
         setupImageBorder(isHidden: true)
-        questionFactory?.requestNextQuestion()
-        showLoadingIndicator()
+        activityIndicator.startAnimating()
         questionFactory?.loadData()
     }
     
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
+        guard let question else {
             return
         }
         currentQuestion = question
@@ -46,13 +50,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - IB Actions
     @IBAction private func noButtonClicked() {
-        guard let currentQuestion = currentQuestion else { return }
+        guard let currentQuestion else { return }
         let givenAnswer = false
         showAnswerResult(isCorrect: currentQuestion.correctAnswer == givenAnswer)
     }
     
     @IBAction private func yesButtonClicked() {
-        guard let currentQuestion = currentQuestion else { return }
+        guard let currentQuestion else { return }
         let givenAnswer = true
         showAnswerResult(isCorrect: currentQuestion.correctAnswer == givenAnswer)
     }
@@ -87,23 +91,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         blockButton(isBlocked: false)
         if currentQuestionIndex == questionsAmount - 1 {
             statisticService?.store(correct: correctAnswers, total: questionsAmount)
-            let quizResultsViewModel = QuizResultsViewModel(title: "Этот раунд окончен!",
-                                                            text: createMessage(),
-                                                            buttonText: "Сыграть еще раз")
-            show(quiz: quizResultsViewModel)
+            let alertModel = AlertModel(
+                title: "Этот раунд окончен",
+                message: createMessage(),
+                buttonText: "OK") { [weak self] _ in
+                    guard let self = self else { return }
+                    self.correctAnswers = 0
+                    self.currentQuestionIndex = 0
+                    self.questionFactory?.requestNextQuestion() }
+            alertPresenter?.showResult(model: alertModel)
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
         }
-    }
-    
-    private func show(quiz result: QuizResultsViewModel) {
-        alertPresenter?.showResult(model: AlertModel(title: result.title, message: result.text, buttonText: result.buttonText, completion: { [weak self] _ in
-            guard let self = self else { return }
-            self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            self.questionFactory?.requestNextQuestion()
-        }))
     }
     
     private func blockButton(isBlocked: Bool) {
@@ -118,7 +118,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func createMessage() -> String {
-        guard let statisticService = statisticService else { return "" }
+        guard let statisticService else { return "" }
         let bestGame = statisticService.bestGame
         let result: String = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
         let count: String = "Количество сыгранных игр: \(statisticService.gamesCount)"
@@ -146,13 +146,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }))
     }
     
+    // MARK: - QuestionFactoryDelegate
+    
     private func hideLoadingIndicator() {
         activityIndicator.isHidden = true
         activityIndicator.stopAnimating()
     }
     
     func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
+        hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
     

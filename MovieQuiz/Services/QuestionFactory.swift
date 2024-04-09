@@ -8,18 +8,20 @@
 import Foundation
 
 final class QuestionFactory: QuestionFactoryProtocol {
-    private let moviesLoader: MoviesLoading
-    private weak var delegate: QuestionFactoryDelegate?
     private var movies: [MostPopularMovie] = []
     
-    init(moviesLoader: MoviesLoader, delegate: QuestionFactoryDelegate?) {
+    private let moviesLoader: MoviesLoadingProtocol
+    private weak var delegate: QuestionFactoryDelegate?
+    
+    
+    init(moviesLoader: MoviesLoadingProtocol, delegate: QuestionFactoryDelegate?) {
         self.delegate = delegate
         self.moviesLoader = moviesLoader
     }
     
     func requestNextQuestion() {
         DispatchQueue.global().async { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             let index = (0..<self.movies.count).randomElement() ?? 0
             
             guard let movie = movies[safe: index] else { return }
@@ -32,16 +34,18 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 print("Failed to load image")
             }
             
-            let rating = Float(movie.rating ?? "0") ?? 0
+            let rating : Float = Float(movie.rating ?? "0") ?? 0
+            let ratingInQuestionFloat = generateRandomRange(rating)
             
-            let text = "Рейтинг этого фильма больше чем 7?"
-            let correctAnswer = rating > 7
+            let text : String = "Рейтинг этого фильма \n больше чем \(ratingInQuestionFloat)?"
+            let correctAnswer : Bool = rating >= ratingInQuestionFloat
+            
             let question = QuizQuestion(image: imageData,
                                         text: text,
                                         correctAnswer: correctAnswer)
             
             DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
                 delegate?.didReceiveNextQuestion(question: question)
             }
         }
@@ -52,7 +56,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
     func loadData() {
         moviesLoader.loadMovies { [weak self] result in
             DispatchQueue.main.async {
-                guard let self = self else { return }
+                guard let self else { return }
                 switch result {
                 case .success(let data):
                     self.movies = data.items
@@ -62,5 +66,15 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 }
             }
         }
+    }
+    
+    private func generateRandomRange(_ rating: Float ) -> Float {
+        let range : Int = 5
+        let ratingInDoubleDigits : Int = Int(rating * 10)
+        let minValue : Int = ratingInDoubleDigits - range
+        let maxValue : Int = ratingInDoubleDigits + range
+        let randomNumber : Int = min((minValue...maxValue).randomElement() ?? 0, 99)
+        
+        return Float(randomNumber) / 10
     }
 }
